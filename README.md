@@ -9,5 +9,5 @@ Live Version: https://eliasfleckenstein03.github.io/lagrange-playground/
 - Drag to move screen
 
 ## Algorithm
-The Lagrange Polynominal Interpolation Algorithm creates a polynomial that goes through all given points.
+The Lagrange Polynominal Interpolation Algorithm creates a polynomial that goes through all given points.  
 It is described here: https://en.wikipedia.org/wiki/Lagrange_polynomial
