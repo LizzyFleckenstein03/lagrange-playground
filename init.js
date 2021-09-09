@@ -9,6 +9,13 @@ let func = null;
 let drag = false;
 let dragPos = null;
 let dragIndex = -1;
+let pointSize = 0.2;
+
+let config = {
+	grid: true,
+	lines: false,
+	circles: false,
+};
 
 const coordinateToScreen = (x, y) => {
 	return [
@@ -50,26 +57,38 @@ const draw = _ => {
 	ctx.clearRect(0, 0, innerWidth, innerHeight);
 
 	for (let x = center[0] % scale; x < innerWidth; x += scale) {
-		ctx.lineWidth = x == center[0] ? 2 : 1;
+		if (Math.round(x) == Math.round(center[0]))
+			ctx.lineWidth = 2;
+		else if (config.grid)
+			ctx.lineWidth = 1;
+		else
+			continue;
+
 		ctx.beginPath();
 		ctx.moveTo(x, 0);
 		ctx.lineTo(x, innerHeight);
+		ctx.strokeStyle = "grey";
 		ctx.stroke();
 	}
 
 	for (let y = center[1] % scale; y < innerHeight; y += scale) {
-		ctx.lineWidth = y == center[1] ? 2 : 1;
+		if (Math.round(y) == Math.round(center[1]))
+			ctx.lineWidth = 2;
+		else if (config.grid)
+			ctx.lineWidth = 1;
+		else
+			continue;
+
 		ctx.beginPath();
 		ctx.moveTo(0, y);
 		ctx.lineTo(innerWidth, y);
+		ctx.strokeStyle = "grey";
 		ctx.stroke();
 	}
 
 	ctx.lineWidth = 2;
 
 	ctx.beginPath();
-	let moved = false;
-
 	for (let x = 0; x < innerWidth; x++) {
 		let y = Math.max(Math.min(center[1] + func((x - center[0]) / scale) * scale, +1e+37), -1e+37);
 
@@ -78,22 +97,54 @@ const draw = _ => {
 		else
 			ctx.lineTo(x, y);
 	}
+	ctx.strokeStyle = "black";
 	ctx.stroke();
 
-	ctx.fillStyle = "blue";
+	for (let i = 0; i < positions.length; i++) {
+		const pos = positions[i];
 
-	for (let circle of positions) {
-		const [x, y] = coordinateToScreen(circle[0], circle[1]);
+		const [x, y] = coordinateToScreen(pos[0], pos[1]);
 		ctx.beginPath();
-		ctx.arc(x, y, scale * 0.1, 0, Math.PI * 2);
+		ctx.arc(x, y, scale * pointSize, 0, Math.PI * 2);
+		ctx.fillStyle = "blue";
 		ctx.fill();
+
+		if (i > 0) {
+			const last = positions[i - 1];
+
+			if (config.lines) {
+				const [lx, ly] = coordinateToScreen(last[0], last[1]);
+
+				ctx.beginPath();
+				ctx.moveTo(lx, ly);
+				ctx.lineTo(x, y);
+				ctx.strokeStyle = "red";
+				ctx.stroke();
+			}
+
+			if (config.circles) {
+				const [cx, cy] = coordinateToScreen((pos[0] + last[0]) / 2, (pos[1] + last[1]) / 2);
+
+				ctx.beginPath();
+				ctx.arc(cx, cy, scale * Math.sqrt(Math.pow(pos[0] - last[0], 2) + Math.pow(pos[1] - last[1], 2)) / 2, 0, Math.PI * 2);
+				ctx.strokeStyle = "green";
+				ctx.stroke();
+			}
+		}
 	}
+};
+
+const sortPositions = _ => {
+	positions.sort((a, b) => {
+		return a[0] < b[0] ? -1 : +1;
+	});
+	lagrange();
+	draw();
 };
 
 const addPosition = pos => {
 	positions.push(pos);
-	lagrange();
-	draw();
+	sortPositions();
 };
 
 const calculateCenter = _ => {
@@ -137,7 +188,7 @@ canvas.addEventListener("mousedown", evt => {
 	for (let i = 0; i < positions.length; i++) {
 		const [x, y] = coordinateToScreen(positions[i][0], positions[i][1]);
 
-		if (Math.sqrt(Math.pow(evt.clientX - x, 2) + Math.pow(evt.clientY - y, 2)) < scale * 0.1) {
+		if (Math.sqrt(Math.pow(evt.clientX - x, 2) + Math.pow(evt.clientY - y, 2)) < scale * pointSize) {
 			dragIndex = i;
 			break;
 		}
@@ -167,10 +218,9 @@ canvas.addEventListener("mousemove", evt => {
 		} else {
 			canvas.style.cursor = "grabbing";
 
-			positions[dragIndex] = screenToCoordinate(dragPos[0] * innerWidth, dragPos[1] * innerHeight);
-
-			lagrange();
-			draw();
+			let pos = positions[dragIndex] = screenToCoordinate(dragPos[0] * innerWidth, dragPos[1] * innerHeight);
+			sortPositions();
+			dragIndex = positions.indexOf(pos);
 		}
 	}
 });
@@ -194,7 +244,7 @@ canvas.addEventListener("mouseleave", evt => {
 
 canvas.addEventListener("wheel", evt => {
 	scale -= evt.deltaY * 0.05;
-	scale = Math.max(7, scale);
+	scale = Math.max(1, scale);
 
 	draw();
 });
@@ -202,5 +252,15 @@ canvas.addEventListener("wheel", evt => {
 addEventListener("resize", _ => {
 	resize();
 });
+
+for (let id of ["grid", "lines", "circles"]) {
+	let elem = document.getElementById(id);
+	elem.checked = config[id];
+
+	elem.addEventListener("input", evt => {
+		config[id] = elem.checked;
+		draw();
+	});
+}
 
 init();
