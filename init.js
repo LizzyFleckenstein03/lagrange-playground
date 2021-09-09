@@ -152,11 +152,12 @@ canvas.addEventListener("mousemove", evt => {
 
 	if (oldDragPos) {
 		drag = true;
-		canvas.style.cursor = "grabbing";
 
 		enableDrag(evt);
 
 		if (dragIndex == -1) {
+			canvas.style.cursor = "move";
+
 			centerF = [
 				centerF[0] + dragPos[0] - oldDragPos[0],
 				centerF[1] + dragPos[1] - oldDragPos[1],
@@ -164,6 +165,8 @@ canvas.addEventListener("mousemove", evt => {
 
 			calculateCenter();
 		} else {
+			canvas.style.cursor = "grabbing";
+
 			positions[dragIndex] = screenToCoordinate(dragPos[0] * innerWidth, dragPos[1] * innerHeight);
 
 			lagrange();
