@@ -1,5 +1,5 @@
 # Lagrange Playground
-Play around with lagrange interpolation online
+Play around with lagrange interpolation online 
 Live Version: https://eliasfleckenstein03.github.io/lagrange-playground/
 
 ## Controls
