@@ -4,6 +4,7 @@ Live Version: https://eliasfleckenstein03.github.io/lagrange-playground/
 
 ## Controls
 - Leftclick to add a point
+- Scroll to zoom in/out
 - Drag a point to move it
 - Drag to move screen
 
